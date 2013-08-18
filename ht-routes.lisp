@@ -28,7 +28,12 @@
 ;; return the param and match-regex pairs from route
 (defun get-param-matches (route)
   (let ((matches (map 'list #'read-from-string (get-param-names (car route))))
+        (dummy ())
         (res ()))
+    ;; keep res store the params from matches in order
+    (dolist (m matches)
+      (push nil dummy))
+    (mapc #'(lambda (&rest e) (setq res (append res e))) matches dummy)
     (loop
        for p in matches
        for v = (getf (cdr route) p)
