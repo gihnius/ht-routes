@@ -1,5 +1,4 @@
-
-* Common Lisp implementation of the routes system for mapping and dispatching URL's for Hunchentoot.
+* route mapping and dispatching URL's for Hunchentoot in Common Lisp.
 
 ** map route
 mapping a url to a hunchentoot handler, use :param to replace the url
