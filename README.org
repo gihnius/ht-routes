@@ -1,0 +1,44 @@
+
+* Common Lisp implementation of the routes system for mapping and dispatching URL's for Hunchentoot.
+
+** map route
+mapping a url to a hunchentoot handler, use :param to replace the url
+content, matching by cl-ppcre regex.
+
+#+BEGIN_SRC lisp
+(map-routes
+  ("/" :get index)
+  ("/about" :get about)
+  ("/wtd" :get get-handler :post post-handler)
+  ("/test/:param1/and/:param2" :get test-params)
+  ("/params/:id" :get show-params :id "\\d+")
+  ("/threads/:id/update" :post update-test :id "\\d+"))
+#+END_SRC
+** route params
+a route:
+#+BEGIN_SRC lisp
+("/this/:route/with/:param" :get get-this :post update-this :route "\\w+" :param "\\d+")
+#+END_SRC
+ will match url like these:
+#+BEGIN_EXAMPLE
+"/this/article/with/123"
+"/this/blog/with/1"
+"/this/xyz/with/0123456789"
+#+END_EXAMPLE
+handler:
+#+BEGIN_SRC lisp
+(defun get-this ()
+  ;; get the params from *route-params*, a plist store the :route and :param
+  (getf *route-params* :route)
+  (getf *route-params* :param)
+)
+
+(defun update-this ()
+   ;; for method POST
+  (getf *route-params* :route)
+  (getf *route-params* :param)
+)
+#+END_SRC
+
+** todo:
+*** optimize
