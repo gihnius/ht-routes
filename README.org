@@ -1,31 +1,35 @@
-* route mapping and dispatching URL's for Hunchentoot in Common Lisp.
+* Route mapping and dispatching for Hunchentoot in Common Lisp.
 
 ** map route
 mapping a url to a hunchentoot handler, use :param to replace the url
 content, matching by cl-ppcre regex.
+do not write a () in regex sides.
 
-#+BEGIN_SRC lisp
-(map-routes
-  ("/" :get index)
-  ("/about" :get about)
-  ("/wtd" :get get-handler :post post-handler)
-  ("/test/:param1/and/:param2" :get test-params)
-  ("/params/:id" :get show-params :id "\\d+")
-  ("/threads/:id/update" :post update-test :id "\\d+"))
+#+BEGIN_SRC common-lisp
+  (map-routes
+    ("/" :get index)
+    ("/about" :get about)
+    ("/wtd" :get get-handler :post post-handler)
+    ("/test/:param1/and/:param2" :get test-params)
+    ("/params/:id" :get show-params :id "\\d+")
+    ("/threads/:id/update" :post update-test :id "\\d+")
+    ("/category/:name/:page" :get show-category :name "\\w+" :page "\\d{2,5}")
+    ("/articles/:year/:month/:day" :get show-articles :year "\\d{4}" :month "\\d{2}" :day "\\d{2}"))
+
 #+END_SRC
 ** route params
 a route:
-#+BEGIN_SRC lisp
+#+BEGIN_SRC common-lisp
 ("/this/:route/with/:param" :get get-this :post update-this :route "\\w+" :param "\\d+")
 #+END_SRC
- will match url like these:
+ will match urls like these:
 #+BEGIN_EXAMPLE
 "/this/article/with/123"
 "/this/blog/with/1"
 "/this/xyz/with/0123456789"
 #+END_EXAMPLE
 handler:
-#+BEGIN_SRC lisp
+#+BEGIN_SRC common-lisp
 (defun get-this ()
   ;; get the params from *route-params*, a plist store the :route and :param
   (getf *route-params* :route)
@@ -38,6 +42,29 @@ handler:
   (getf *route-params* :param)
 )
 #+END_SRC
+
+** usage
+#+BEGIN_SRC common-lisp
+(load "ht-routes.lisp")
+(use-package :ht-routes)
+(map-routes
+  ("/" :get index)
+  ("/about" :get about)
+  ("/wtd" :get get-handler :post post-handler)
+  ("/test/:param1/and/:param2" :get test-params)
+  ("/params/:id" :get show-params :id "\\d+")
+  ("/threads/:id/update" :post update-test :id "\\d+")
+  ("/category/:name/:page" :get show-category :name "\\w+" :page "\\d{2,5}")
+  ("/articles/:year/:month/:day" :get show-articles :year "\\d{4}" :month "\\d{2}" :day "\\d{2}"))
+
+(defvar *server* (hunchentoot:acceptor :port 8000))
+(hunchentoot:start *server*)
+#+END_SRC
+then query some urls from browser:
+http://localhost:8000/
+http://localhost:8000/about
+http://localhost:8000/test/hello/and/world
+http://localhost:8000/params/123
 
 ** todo:
 *** optimize
