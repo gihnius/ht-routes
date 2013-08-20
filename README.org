@@ -58,20 +58,29 @@ the same for method POST
 
 ** usage sample
 #+BEGIN_SRC lisp
-(load "ht-routes.lisp")
-(use-package :ht-routes)
-(map-routes
-  ("/" :get index)
-  ("/about" :get about)
-  ("/wtd" :get get-handler :post post-handler)
-  ("/test/:param1/and/:param2" :get test-params)
-  ("/params/:id" :get show-params :id "\\d+")
-  ("/threads/:id/update" :post update-test :id "\\d+")
-  ("/category/:name/:page" :get show-category :name "\\w+" :page "\\d{2,5}")
-  ("/articles/:year/:month/:day" :get show-articles :year "\\d{4}" :month "\\d{2}" :day "\\d{2}"))
+  (load "ht-routes.lisp")
+  (use-package :ht-routes)
+  (map-routes
+    ("/" :get index)
+    ("/about" :get about)
+    ("/wtd" :get get-handler :post post-handler)
+    ("/test/:param1/and/:param2" :get test-params)
+    ("/params/:id" :get show-params :id "\\d+")
+    ("/threads/:id/update" :post update-test :id "\\d+")
+    ("/category/:name/:page" :get show-category :name "\\w+" :page "\\d{2,5}")
+    ("/articles/:year/:month/:day" :get show-articles :year "\\d{4}" :month "\\d{2}" :day "\\d{2}"))
 
-(defvar *server* (hunchentoot:acceptor :port 8000))
-(hunchentoot:start *server*)
+  (defun index ()
+    (format nil "Hello world!"))
+
+  (defun test-params ()
+    (format nil "method: ~S param1: ~S param2: ~S"
+            (hunchentoot:request-method*)
+            (getf *route-params* :param1)
+            (getf *route-params* :param2)))
+
+  (defvar *server* (hunchentoot:acceptor :port 8000))
+  (hunchentoot:start *server*)
 #+END_SRC
 
 then query some urls from browser:
