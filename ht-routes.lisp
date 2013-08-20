@@ -88,7 +88,8 @@
       func
       (setf (symbol-function func) #'(lambda()))))
 
-;; override hunchentoot dispatcher
+;; override hunchentoot dispatcher by default
+;; define a new acceptor class is recommended here
 (defmethod acceptor-dispatch-request ((acceptor acceptor) request)
   (if (null *ht-routes*)
       (let ((path (and (acceptor-document-root acceptor)
