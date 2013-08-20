@@ -2,10 +2,12 @@
 
 ** map route
 mapping a url to a hunchentoot handler, use :param to replace the url
+
 content, matching by cl-ppcre regex.
+
 do not write a () in regex sides.
 
-#+BEGIN_SRC common-lisp
+#+BEGIN_SRC lisp
   (map-routes
     ("/" :get index)
     ("/about" :get about)
@@ -18,33 +20,44 @@ do not write a () in regex sides.
 
 #+END_SRC
 ** route params
+
 a route:
-#+BEGIN_SRC common-lisp
+
+#+BEGIN_SRC lisp
+("route-string" :http-method handler :method2 handler2 :param "regex" :param2 "regex")
 ("/this/:route/with/:param" :get get-this :post update-this :route "\\w+" :param "\\d+")
 #+END_SRC
+
  will match urls like these:
+
 #+BEGIN_EXAMPLE
 "/this/article/with/123"
 "/this/blog/with/1"
 "/this/xyz/with/0123456789"
 #+END_EXAMPLE
-handler:
-#+BEGIN_SRC common-lisp
-(defun get-this ()
-  ;; get the params from *route-params*, a plist store the :route and :param
-  (getf *route-params* :route)
-  (getf *route-params* :param)
-)
 
-(defun update-this ()
-   ;; for method POST
+handler:
+
+get the params from *route-params*, a plist store the :route and :param
+
+#+BEGIN_SRC lisp
+(defun get-this ()
   (getf *route-params* :route)
   (getf *route-params* :param)
 )
 #+END_SRC
 
-** usage
-#+BEGIN_SRC common-lisp
+the same for method POST
+
+#+BEGIN_SRC lisp
+(defun update-this ()
+  (getf *route-params* :route)
+  (getf *route-params* :param)
+)
+#+END_SRC
+
+** usage sample
+#+BEGIN_SRC lisp
 (load "ht-routes.lisp")
 (use-package :ht-routes)
 (map-routes
@@ -60,10 +73,15 @@ handler:
 (defvar *server* (hunchentoot:acceptor :port 8000))
 (hunchentoot:start *server*)
 #+END_SRC
+
 then query some urls from browser:
+
 http://localhost:8000/
+
 http://localhost:8000/about
+
 http://localhost:8000/test/hello/and/world
+
 http://localhost:8000/params/123
 
 ** todo:
