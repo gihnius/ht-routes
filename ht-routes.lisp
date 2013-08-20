@@ -86,22 +86,29 @@
 (defun defunction (func)
   (if (fboundp func)
       func
-      (setf (symbol-function func) #'(lambda() ))))
+      (setf (symbol-function func) #'(lambda()))))
 
+;; override hunchentoot dispatcher
 (defmethod acceptor-dispatch-request ((acceptor acceptor) request)
-  (dolist (e *ht-routes*)
-    (let ((scanner (car e))
-          (route (car (cdr e))))
-      (multiple-value-bind (match results)
-          (scan-to-strings scanner (script-name*))
-        (when results
-          (set-current-route-params route (coerce results 'list)))
-        (when match
-          (return-from acceptor-dispatch-request
-            (let ((method (request-method*)))
-              (loop for (route-method handler) on (get-method-handlers route) by #'cddr do
-                   (when (eq method route-method)
-                     (return-from acceptor-dispatch-request (funcall (defunction handler))))
-                 finally
-                   (setf (return-code* *reply*) +http-not-found+)
-                   (abort-request-handler)))))))))
+  (if (null *ht-routes*)
+      (let ((path (and (acceptor-document-root acceptor)
+                       (request-pathname request))))
+        (if path
+            (handle-static-file
+             (merge-pathnames (if (equal "/" (script-name request)) #p"index.html" path)
+                              (acceptor-document-root acceptor)))))
+      (dolist (e *ht-routes*)
+        (let ((scanner (car e))
+              (route (car (cdr e))))
+          (multiple-value-bind (match results)
+              (scan-to-strings scanner (script-name*))
+            (when results
+              (set-current-route-params route (coerce results 'list)))
+            (when match
+              (return-from acceptor-dispatch-request
+                (let ((method (request-method*)))
+                  (loop for (route-method handler) on (get-method-handlers route) by #'cddr do
+                       (when (eq method route-method)
+                         (return-from acceptor-dispatch-request (funcall (defunction handler))))))))))))
+  (setf (return-code* *reply*) +http-not-found+)
+  (abort-request-handler))
