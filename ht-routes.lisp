@@ -62,14 +62,6 @@
           (setf newpath (regex-replace p newpath pattern))))
     (create-scanner (strcat "^" newpath "$"))))
 
-#|
-(map-routes
-  ("/" :get index)
-  ("/test/:param1/and/:param2" :get test-params)
-  ("/params/:id" :get show-params :id "\\d+")
-  ("/threads/:id/update" :post update-test :id "\\d+"))
-|#
-
 (defmacro map-routes (&body routes)
   `(setq *ht-routes* (list ,@(loop for route in routes
                                 collect `(list (make-path-scanner ',route) ',route)))))
@@ -100,7 +92,7 @@
                               (acceptor-document-root acceptor)))))
       (dolist (e *ht-routes*)
         (let ((scanner (car e))
-              (route (car (cdr e))))
+              (route (cadr e)))
           (multiple-value-bind (match results)
               (scan-to-strings scanner (script-name*))
             (when results
