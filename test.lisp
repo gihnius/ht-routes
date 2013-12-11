@@ -1,6 +1,3 @@
-;; test using rt
-(ql:quickload :rt)
-(load "ht-routes.lisp")
 (in-package :ht-routes)
 
 (defvar route1 '("/" :get index))
