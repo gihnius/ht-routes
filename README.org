@@ -1,6 +1,6 @@
 * Route mapping and dispatching for Hunchentoot in Common Lisp.
 
-** map route
+** map routes
 mapping a url to a hunchentoot handler, use :param to replace the url
 
 content, matching by cl-ppcre regex.
@@ -9,89 +9,50 @@ do not write a () in regex sides.
 
 #+BEGIN_SRC lisp
   (map-routes
-    ("/" :get index)
-    ("/about" :get about)
-    ("/wtd" :get get-handler :post post-handler)
-    ("/test/:param1/and/:param2" :get test-params)
-    ("/params/:id" :get show-params :id "\\d+")
-    ("/threads/:id/update" :post update-test :id "\\d+")
-    ("/category/:name/:page" :get show-category :name "\\w+" :page "\\d{2,5}")
-    ("/articles/:year/:month/:day" :get show-articles :year "\\d{4}" :month "\\d{2}" :day "\\d{2}"))
+    (get "/" index)
+    (get "/about" about)
+    (get "/wtd" get-handler)
+    (get "/test/:param1/and/:param2" test-params)
+    (get "/params/:id" show-params :id "\\d+")
+    (post "/threads/update/:id" update-test :id "\\d+")
+    (get "/category/:name/:page" show-category :name "\\w+" :page "\\d{2,5}")
+    (get "/articles/:year/:month/:day" show-articles :year "\\d{4}" :month "\\d{2}" :day "\\d{2}"))
 
+;; add more routes
+(add-route '(get "/more" more-handler))
+;; ...
 #+END_SRC
+
 ** route params
-
-a route:
-
+route template:
+(method "url/path/def" handler)
+(method "url/:param1/def/:param2" handler)
+(method "url/:param1/def/:param2" handler :param1 "\\d{4}" :param2 "\\w+")
+;; eg.
 #+BEGIN_SRC lisp
-("route-string" :http-method handler :method2 handler2 :param "regex" :param2 "regex")
-("/this/:route/with/:param" :get get-this :post update-this :route "\\w+" :param "\\d+")
+(get "/this/:route/with/:param" get-this :route "\\w+" :param "\\d+")
 #+END_SRC
 
- will match urls like these:
-
-#+BEGIN_EXAMPLE
-"/this/article/with/123"
-"/this/blog/with/1"
-"/this/xyz/with/0123456789"
-#+END_EXAMPLE
-
-handler:
-
-get the params from *route-params*, a plist store the :route and :param
-
+** handlers
+route and handler:
 #+BEGIN_SRC lisp
-(defun get-this ()
-  (getf *route-params* :route)
-  (getf *route-params* :param)
-)
+(map-routes
+  (get "/" home)
+  (get "/books/:id" show-book :id "\\d{8}")
+  (post "/books/update/:id" update-book :id "\\d{8}"))
+
+;; use map-routes instead of add-route
+(add-route '(get "/index" show-index))
+(defun show-index ()
+  ...)
+
+;; if there are params
+(defun show-book(params)
+  (let ((book-id (getf params :id)))
+    ...))
+
+;; start hunchentoot
+;; use ht-acceptor instead of easy-acceptor
+(hunchentoot:start (make-instance 'ht-routes:ht-acceptor :port 4242))
+
 #+END_SRC
-
-the same for method POST
-
-#+BEGIN_SRC lisp
-(defun update-this ()
-  (getf *route-params* :route)
-  (getf *route-params* :param)
-)
-#+END_SRC
-
-** usage sample
-#+BEGIN_SRC lisp
-  (load "ht-routes.lisp")
-  (use-package :ht-routes)
-  (map-routes
-    ("/" :get index)
-    ("/about" :get about)
-    ("/wtd" :get get-handler :post post-handler)
-    ("/test/:param1/and/:param2" :get test-params)
-    ("/params/:id" :get show-params :id "\\d+")
-    ("/threads/:id/update" :post update-test :id "\\d+")
-    ("/category/:name/:page" :get show-category :name "\\w+" :page "\\d{2,5}")
-    ("/articles/:year/:month/:day" :get show-articles :year "\\d{4}" :month "\\d{2}" :day "\\d{2}"))
-
-  (defun index ()
-    (format nil "Hello world!"))
-
-  (defun test-params ()
-    (format nil "method: ~S param1: ~S param2: ~S"
-            (hunchentoot:request-method*)
-            (getf *route-params* :param1)
-            (getf *route-params* :param2)))
-
-  (defvar *server* (hunchentoot:acceptor :port 8000))
-  (hunchentoot:start *server*)
-#+END_SRC
-
-then query some urls from browser:
-
-http://localhost:8000/
-
-http://localhost:8000/about
-
-http://localhost:8000/test/hello/and/world
-
-http://localhost:8000/params/123
-
-** todo:
-*** optimize
